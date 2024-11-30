@@ -1,5 +1,4 @@
 mod opcode;
-
 use std::io::{Read, Write};
 use opcode::{Opcode, Code};
 
@@ -72,7 +71,7 @@ impl Interpreter {
 fn main () -> Result<(), Box<dyn std::error::Error>>{
     // input args
     let args: Vec<String> = std::env::args().collect();
-    let data = std::fs::read("res/hello_word.bf")?;
+    let data = std::fs::read("res/to_upper.bf")?;
     // let data = std::fs::read(&args[1])?;
 
     // create interpreter
