@@ -11,8 +11,8 @@
 pub enum Opcode {
     SHR = 0x3E,
     SHL = 0x3C,
-    INC = 0x2B,
-    DEC = 0x2D,
+    ADD = 0x2B,
+    SUB = 0x2D,
     PUTCHAR = 0x2E,
     GETCHAR = 0x2C,
     LB = 0x5B,
@@ -24,8 +24,8 @@ impl From<u8> for Opcode {
         match value {
             0x3E => Opcode::SHR,
             0x3C => Opcode::SHL,
-            0x2B => Opcode::INC,
-            0x2D => Opcode::DEC,
+            0x2B => Opcode::ADD,
+            0x2D => Opcode::SUB,
             0x2E => Opcode::PUTCHAR,
             0x2C => Opcode::GETCHAR,
             0x5B => Opcode::LB,
@@ -45,16 +45,35 @@ impl Code {
         let dict: Vec<u8> = vec![
             Opcode::SHR as u8,
             Opcode::SHL as u8,
-            Opcode::INC as u8,
-            Opcode::DEC as u8,
+            Opcode::ADD as u8,
+            Opcode::SUB as u8,
             Opcode::PUTCHAR as u8,
             Opcode::GETCHAR as u8,
             Opcode::LB as u8,
             Opcode::RB as u8,
         ];
 
-        let instrs: Vec<Opcode> = data.iter().filter(|x| dict.contains(x)).map(|x| Opcode::from(*x)).collect();
+        let instrs: Vec<Opcode> = data.
+            iter().
+            filter(|x| dict.contains(x)).
+            map(|x| Opcode::from(*x)).
+            collect();
 
-        Ok(Code { instrs, jtable: Default::default() })
+        let mut jstack: Vec<usize> = Vec::new();
+        let mut jtable:std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+
+        for (i, instr) in instrs.iter().enumerate() {
+            if Opcode::LB == *instr {
+                jstack.push(i);
+            }
+            if Opcode::RB == *instr {
+                let j = jstack.pop().ok_or("vec is empty")?;
+
+                // record position of jump to and back
+                jtable.insert(j, i);
+                jtable.insert(i, j);
+            }
+        }
+        Ok(Code { instrs, jtable })
     }
 }
